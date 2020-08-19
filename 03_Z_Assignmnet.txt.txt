@@ -1,0 +1,109 @@
+Learning Objectives:-
+Create a yaml file containing the pod spec for the nginx pod.
+Create the pod.
+
+
+Your company is getting ready to launch a new website, and they need you to set up an nginx web server in their Kubernetes cluster. The nginx server will need to be accessible via network in the future, so you will need to expose port 80 as a containerPort for the nginx container. Your team has also asked you to ensure that nginx runs in quiet mode for the time being to cut down on unnecessary log output. You can do this by setting the command to nginx and passing the following arg to the container: -g daemon off; -q. As this nginx server belongs to the Web team, you will need to create it in the team's web namespace.
+
+To summarize:
+
+Use the nginx container image.
+The container needs a containerPort of 80.
+Set the command to nginx
+Pass in the -g daemon off; -q args to run nginx in quiet mode.
+Create the pod in the web namespace.
+Once the pod is created, you should be able to find it with kubectl get pods -n web. Once the pod is created, you can get more information about its current status with kubectl describe pod nginx -n web.
+
+=======================================================
+creating a namespace web 
+
+vi test.yml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: web
+
+kubectl apply -f test.yml 
+
+ubuntu@ip-172-31-42-41:~$ kubectl apply -f test.yml
+namespace/web created
+========================================================
+
+vi nginx-web.yml
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  namespace: web
+spec:
+  containers:
+    - image: nginx
+      name: nginx-demo
+      command: ["nginx","-g","daemon off","-q"]
+      ports:
+        - containerPort: 80
+          protocol: TCP
+
+ubuntu@ip-172-31-42-41:~$ kubectl apply -f nginx-web.yml
+pod/nginx created
+ubuntu@ip-172-31-42-41:~$ kubectl get pods -n web
+NAME    READY   STATUS    RESTARTS   AGE
+nginx   1/1     Running   0          15s
+
+======================================================
+
+ubuntu@ip-172-31-42-41:~$ kubectl describe pod nginx -n web
+Name:         nginx
+Namespace:    web
+Priority:     0
+Node:         ip-172-31-44-252/172.31.44.252
+Start Time:   Fri, 12 Jun 2020 11:40:25 +0000
+Labels:       <none>
+Annotations:  Status:  Running
+IP:           10.32.0.3
+IPs:
+  IP:  10.32.0.3
+Containers:
+  nginx-demo:
+    Container ID:  docker://686e67572e607e38d3af5efb9a7ebb8d8f49665e4a877450b4e8b2fdc202c80e
+    Image:         nginx
+    Image ID:      docker-pullable://nginx@sha256:21f32f6c08406306d822a0e6e8b7dc81f53f336570e852e25fbe1e3e3d0d0133
+    Port:          80/TCP
+    Host Port:     0/TCP
+    Command:
+      nginx
+      -g
+      daemon off;
+      -q
+    State:          Running
+      Started:      Fri, 12 Jun 2020 11:40:29 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-dldbb (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  default-token-dldbb:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-dldbb
+    Optional:    false
+QoS Class:       BestEffort
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute for 300s
+                 node.kubernetes.io/unreachable:NoExecute for 300s
+Events:
+  Type    Reason     Age   From                       Message
+  ----    ------     ----  ----                       -------
+  Normal  Scheduled  28s   default-scheduler          Successfully assigned web/nginx to ip-172-31-44-252
+  Normal  Pulling    27s   kubelet, ip-172-31-44-252  Pulling image "nginx"
+  Normal  Pulled     24s   kubelet, ip-172-31-44-252  Successfully pulled image "nginx"
+  Normal  Created    24s   kubelet, ip-172-31-44-252  Created container nginx-demo
+  Normal  Started    24s   kubelet, ip-172-31-44-252  Started container nginx-demo

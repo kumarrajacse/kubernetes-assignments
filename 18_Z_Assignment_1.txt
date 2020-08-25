@@ -1,0 +1,69 @@
+Learning Objectives:-
+Perform a rolling update of the container version
+Roll back to the previous working state
+
+
+Problem Statement:-
+Your company's developers have just finished developing a new version of their candy-themed mobile game. They are ready to update the backend services that are running in your Kubernetes cluster. There is a deployment in the cluster managing the replicas for this application. The deployment is called candy-deployment. 
+
+candy-deployment.yaml
+--------------------------
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: candy-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: candy-ws
+  template:
+    metadata:
+      labels:
+        app: candy-ws
+    spec:
+      containers:
+      - image: linuxacademycontent/candy-service:2
+        name: candy-ws
+
+ubuntu@ip-172-31-42-41:~$ kubectl apply -f candy-deployment.yaml
+deployment.apps/candy-deployment created
+
+ubuntu@ip-172-31-42-41:~$ kubectl get deployments
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+candy-deployment   2/2     2            2           44s
+
+
+=================================================================================
+You have been asked to update the image for the container named candy-ws in this deployment template to a new version, linuxacademycontent/candy-service:3.
+
+ans:-
+
+ ubuntu@ip-172-31-42-41:~$ kubectl set image deployment/candy-deployment candy-ws=linuxacademycontent/candy-service:3 --record=true
+ deployment.apps/candy-deployment image updated
+
+ 
+kubectl get deployment
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+candy-deployment   2/2     1            2           25m
+==============================================================================
+
+After you have updated the image using a rolling update, check on the status of the update to make sure it is working. If it is not working, perform a rollback to the previous state.
+
+ubuntu@ip-172-31-42-41:~$ kubectl rollout history deployment/candy-deployment
+deployment.apps/candy-deployment
+REVISION  CHANGE-CAUSE
+1         <none>
+2         kubectl set image deployment/candy-deployment candy-ws=linuxacademycontent/candy-service:3 --record=true
+
+ubuntu@ip-172-31-42-41:~$ kubectl rollout undo deployment/candy-deployment  --to-revision=1
+deployment.apps/candy-deployment rolled back
+
+=============================================================================================================
+Make sure that the rolling update is in such a way that atleast 25% of pods are up and running during update with Zero downtime.
+
+
+
+kubectl rollout status deployment/candy-deployment 
+kubectl get rs
+kubectl get pods

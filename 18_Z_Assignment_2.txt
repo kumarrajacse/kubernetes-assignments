@@ -1,0 +1,49 @@
+Learning Objectives:-
+Create the cron job in the cluster
+Allow the cron job to run successfully
+
+Problem Statement:-
+Your company has a simple data cleanup process that is run periodically for maintenance purposes. They would like to stop doing this manually in order to save time, so you have been asked to implement a cron job in the Kubernetes cluster to run this process. Create a cron job called cleanup-cronjob using the linuxacademycontent/data-cleanup:1 image. Have the job run every minute with the following cron expression: */1 * * * *.
+
+ans:-
+===================================
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: cleanup-cronjob
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name : clean-up
+            image: linuxacademycontent/data-cleanup:1
+          restartPolicy: OnFailure
+======================================================
+
+kubectl create -f cron-job.yml
+cronjob.batch/cleanup-cronjob created
+==============================================
+
+ kubectl get cronjobs
+NAME              SCHEDULE      SUSPEND   ACTIVE   LAST SCHEDULE   AGE
+cleanup-cronjob   */1 * * * *   False     0        17s             2m28s
+======================================================
+
+  Type    Reason            Age    From                Message
+  ----    ------            ----   ----                -------
+  Normal  SuccessfulCreate  2m31s  cronjob-controller  Created job cleanup-cronjob-1591974420
+  Normal  SawCompletedJob   2m21s  cronjob-controller  Saw completed job: cleanup-cronjob-1591974420, status: Complete
+  Normal  SuccessfulCreate  91s    cronjob-controller  Created job cleanup-cronjob-1591974480
+  Normal  SawCompletedJob   81s    cronjob-controller  Saw completed job: cleanup-cronjob-1591974480, status: Complete
+  Normal  SuccessfulCreate  31s    cronjob-controller  Created job cleanup-cronjob-1591974540
+  Normal  SawCompletedJob   21s    cronjob-controller  Saw completed job: cleanup-cronjob-1591974540, status: Complete
+=====================================
+ kubectl get jobs --watch
+NAME                         COMPLETIONS   DURATION   AGE
+cleanup-cronjob-1591974780   1/1           3s         58s
+cleanup-cronjob-1591974840   0/1                      0s
+cleanup-cronjob-1591974840   0/1           0s         0s
+cleanup-cronjob-1591974840   1/1           1s         1s
